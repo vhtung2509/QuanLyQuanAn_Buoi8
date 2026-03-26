@@ -79,5 +79,58 @@ namespace QuanLyQuanAn.Reports
 
             reportViewer.RefreshReport();
         }
+
+        private void btnLocKetQua_Click(object sender, EventArgs e)
+        {
+            // Lấy mốc thời gian từ 2 ô DateTimePicker
+            DateTime tuNgay = dtpTuNgay.Value.Date; // 0h00 ngày bắt đầu
+            DateTime denNgay = dtpDenNgay.Value.Date.AddDays(1).AddTicks(-1); // 23h59 ngày kết thúc
+
+            // Lấy dữ liệu và LỌC THEO NGÀY
+            var danhSachDoanhThu = context.HoaDon
+                .Include(r => r.NhanVien)
+                .Include(r => r.KhachHang)
+                .Where(r => r.NgayLap >= tuNgay && r.NgayLap <= denNgay) // Dòng lọc quan trọng
+                .Select(r => new
+                {
+                    ID = (int)r.ID,
+                    TenNhanVien = r.NhanVien.HoVaTen ?? "",
+                    TenKhachHang = r.KhachHang.HoVaTen ?? "",
+                    NgayLap = r.NgayLap,
+                    TongTien = (int)r.HoaDon_ChiTiet.Sum(ct => (int)(ct.SoLuongBan * ct.DonGiaBan))
+                })
+                .ToList();
+
+            dtDoanhThu.Clear();
+            foreach (var row in danhSachDoanhThu)
+            {
+                dtDoanhThu.AddDoanhThuRow(
+                    Convert.ToInt32(row.ID),
+                    row.TenNhanVien,
+                    row.TenKhachHang,
+                    row.NgayLap,
+                    Convert.ToInt32(row.TongTien)
+                );
+            }
+
+            ReportDataSource reportDataSource = new ReportDataSource();
+            reportDataSource.Name = "DoanhThu";
+            reportDataSource.Value = dtDoanhThu;
+
+            reportViewer.LocalReport.DataSources.Clear();
+            reportViewer.LocalReport.DataSources.Add(reportDataSource);
+
+            // Tạo dòng chữ theo thời gian đã chọn (Khớp tên Parameter MoTaDoanhThu)
+            string moTa = $"Từ ngày {dtpTuNgay.Value.ToString("dd/MM/yyyy")} đến ngày {dtpDenNgay.Value.ToString("dd/MM/yyyy")}";
+            ReportParameter reportParameter = new ReportParameter("MoTaDoanhThu", moTa);
+            reportViewer.LocalReport.SetParameters(reportParameter);
+
+            reportViewer.RefreshReport();
+        }
+
+        private void btnHienTatCa_Click(object sender, EventArgs e)
+        {
+            frmThongKeDoanhThu_Load(sender, e);
+        }
     }
 }

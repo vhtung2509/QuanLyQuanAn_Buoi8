@@ -21,6 +21,8 @@ namespace QuanLyQuanAn.Data
         // Liên kết ngược lại bảng Nhân viên và Khách hàng
         public virtual KhachHang KhachHang { get; set; } = null!;
         public virtual NhanVien NhanVien { get; set; } = null!;
+        public int? BanAnID { get; set; }
+        public virtual BanAn? BanAn { get; set; }
     }
 
     [NotMapped]
